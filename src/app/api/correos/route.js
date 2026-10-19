@@ -50,20 +50,24 @@ export async function POST(request) {
   const renta = Number(rentaEnDigitos);
   const digitosTelefono = datos.telefono.replace(/\D/g, "");
 
-  if (
-    datos.nombre.length < 2 || datos.nombre.length > 120
-    || datos.clinica.length < 2 || datos.clinica.length > 100
-    || !nacimientoNormalizado
-    || !/^\$?\s?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)$/.test(datos.rentaImponible)
+  const camposInvalidos = [];
+  if (datos.nombre.length < 2 || datos.nombre.length > 120) camposInvalidos.push("nombre");
+  if (datos.clinica.length < 2 || datos.clinica.length > 100) camposInvalidos.push("clínica de preferencia");
+  if (!nacimientoNormalizado) camposInvalidos.push("fecha de nacimiento");
+  if (!/^\$?\s?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)$/.test(datos.rentaImponible)
     || !/^\d+$/.test(rentaEnDigitos)
-    || !Number.isSafeInteger(renta) || renta <= 0
-    || datos.correo.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)
-    || !["Sí", "No"].includes(datos.cargas)
-    || digitosTelefono.length < 8 || digitosTelefono.length > 15
+    || !Number.isSafeInteger(renta) || renta <= 0) camposInvalidos.push("renta imponible");
+  if (datos.correo.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)) camposInvalidos.push("correo");
+  if (!["Sí", "No"].includes(datos.cargas)) camposInvalidos.push("cargas");
+  if (digitosTelefono.length < 8 || digitosTelefono.length > 15
     || datos.telefono.length > 30
-    || !/^\+?[\d\s()-]+$/.test(datos.telefono)
-  ) {
-    return Response.json({ success: false, message: "Revisa los datos del formulario e inténtalo nuevamente." }, { status: 400 });
+    || !/^\+?[\d\s()-]+$/.test(datos.telefono)) camposInvalidos.push("teléfono");
+
+  if (camposInvalidos.length > 0) {
+    return Response.json({
+      success: false,
+      message: `Revisa el campo ${camposInvalidos.join(", ")} e inténtalo nuevamente.`,
+    }, { status: 400 });
   }
 
   const apiKey = process.env.BREVO_API_KEY;
