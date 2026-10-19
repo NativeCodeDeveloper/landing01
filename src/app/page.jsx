@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const CLAVE_BORRADOR = "solicitud-salud-borrador-v1";
+const NUMERO_WHATSAPP_DESTINO = "56935568361"; // +56 9 3556 8361
 
 export default function PaginaBienestar() {
     const referenciaFormulario = useRef(null);
@@ -50,7 +51,17 @@ export default function PaginaBienestar() {
 
     function abrirWhatsAppConDatos() {
         const formulario = referenciaFormulario.current;
-        if (!formulario || !formulario.reportValidity()) return;
+        if (!formulario) return;
+
+        if (!formulario.reportValidity()) {
+            establecerContenidoDialogo({
+                titulo: "Completa el formulario",
+                mensaje: "Para enviarnos tus datos por WhatsApp, primero completa todos los campos del formulario.",
+            });
+            establecerDialogoAbierto(true);
+            formulario.scrollIntoView({ behavior: "smooth", block: "center" });
+            return;
+        }
 
         const datos = Object.fromEntries(new FormData(formulario).entries());
         const fechaNacimiento = datos.fechaNacimiento.split("-").reverse().join("/");
@@ -65,8 +76,9 @@ export default function PaginaBienestar() {
             `Teléfono: ${datos.telefono}`,
         ].join("\n");
 
-        const enlaceWhatsApp = `https://wa.me/56935568361?text=${encodeURIComponent(mensaje)}`;
-        window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+        const enlaceWhatsApp = `https://wa.me/${NUMERO_WHATSAPP_DESTINO}?text=${encodeURIComponent(mensaje)}`;
+        const ventanaWhatsApp = window.open(enlaceWhatsApp, "_blank", "noopener,noreferrer");
+        if (!ventanaWhatsApp) window.location.href = enlaceWhatsApp;
     }
 
     async function enviarCorreosBrevo(evento) {
@@ -152,7 +164,8 @@ export default function PaginaBienestar() {
               <div className="flex items-center gap-3 sm:items-start"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0d644b]"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-familia" /></svg></span><p className="text-xs font-medium leading-5 text-[#38594b]">Para ti y tu familia</p></div>
               <div className="flex items-center gap-3 sm:items-start"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0d644b]"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-escudo" /></svg></span><p className="text-xs font-medium leading-5 text-[#38594b]">Te acompañamos en todo el proceso</p></div>
             </div>
-            <button type="button" onClick={abrirWhatsAppConDatos} className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#0b6048] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(10,81,56,0.9)] transition hover:bg-[#084d3b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6048] sm:w-fit"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-whatsapp" /></svg>Revisar mis opciones gratis<span aria-hidden="true" className="text-lg font-light">↗</span></button>
+                        <button type="button" onClick={abrirWhatsAppConDatos} className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#0b6048] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(10,81,56,0.9)] transition hover:bg-[#084d3b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6048] sm:w-fit"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-whatsapp" /></svg>Revisar mis opciones gratis<span aria-hidden="true" className="text-lg font-light">↗</span></button>
+            <p className="mt-3 text-xs leading-5 text-[#52645d]">Al hacer clic se abrirá WhatsApp con tus datos del formulario listos para enviarnos.</p>
           </div>
           <div role="img" aria-label="Pareja sonriendo" className="relative min-h-[330px] bg-[url('/imagenes/pareja-tranquilidad.png')] bg-cover bg-right sm:min-h-[420px] lg:min-h-full">
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/70 bg-white/90 p-4 shadow-lg shadow-[#1f4d35]/10 backdrop-blur-sm sm:bottom-8 sm:left-8 sm:right-auto sm:max-w-[300px]"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#95612a]">Beneficio adicional</p><p className="mt-1 text-base font-bold text-[#3e2865]">Bono de Bienvenida</p><p className="mt-1 text-xs leading-5 text-[#625f68]">Si realizas tu cambio y cumples las condiciones de la promoción.</p></div>
@@ -214,10 +227,10 @@ export default function PaginaBienestar() {
             <div><label htmlFor="nombre" className="mb-2 block text-xs font-semibold">Nombre completo *</label><input id="nombre" name="nombre" type="text" autoComplete="name" required maxLength={120} placeholder="Ej: María Pérez González" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="clinica" className="mb-2 block text-xs font-semibold">Clínica de preferencia *</label><input id="clinica" name="clinica" type="text" required maxLength={100} placeholder="Ej: Clínica Santa María" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="nacimiento" className="mb-2 block text-xs font-semibold">Fecha de nacimiento *</label><input id="nacimiento" name="fechaNacimiento" type="date" autoComplete="bday" required className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
-            <div><label htmlFor="renta" className="mb-2 block text-xs font-semibold">¿Cuánto es tu renta imponible? *</label><input id="renta" name="rentaImponible" type="text" inputMode="numeric" required maxLength={20} placeholder="Ej: $1.000.000" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
+            <div><label htmlFor="renta" className="mb-2 block text-xs font-semibold">¿Cuánto es tu renta imponible? *</label><input id="renta" name="rentaImponible" type="text" inputMode="numeric" required maxLength={20} pattern="\$?\s?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)" title="Ingresa tu renta en pesos, por ejemplo: $1.000.000" placeholder="Ej: $1.000.000" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="correo" className="mb-2 block text-xs font-semibold">Email *</label><input id="correo" name="correo" type="email" autoComplete="email" required maxLength={254} placeholder="ejemplo@correo.cl" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="cargas" className="mb-2 block text-xs font-semibold">¿Tienes cargas? *</label><select id="cargas" name="cargas" defaultValue="" required className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15"><option value="" disabled>Selecciona una opción</option><option value="Sí">Sí</option><option value="No">No</option></select></div>
-            <div><label htmlFor="telefono" className="mb-2 block text-xs font-semibold">Teléfono *</label><input id="telefono" name="telefono" type="tel" autoComplete="tel" required maxLength={30} placeholder="+56 9 1234 5678" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
+            <div><label htmlFor="telefono" className="mb-2 block text-xs font-semibold">Teléfono *</label><input id="telefono" name="telefono" type="tel" autoComplete="tel" required maxLength={30} pattern="(?:[+()\-\s]*\d){8,15}[+()\-\s]*" title="Ingresa un teléfono válido, por ejemplo: +56 9 1234 5678" placeholder="+56 9 1234 5678" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div className="flex items-end"><button
                 type="submit" disabled={enviando} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#0b6048] px-4 text-sm font-semibold text-white transition hover:bg-[#084d3b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6048] disabled:cursor-wait disabled:opacity-70">{enviando ? "Enviando..." : "Enviar formulario"} <span aria-hidden="true">↗</span></button></div>
           </form>

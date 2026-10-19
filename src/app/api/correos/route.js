@@ -46,7 +46,7 @@ export async function POST(request) {
   };
 
   const nacimientoNormalizado = normalizarFechaNacimiento(datos.fechaNacimiento);
-  const rentaEnDigitos = datos.rentaImponible.replace(/[$.\s]/g, "");
+  const rentaEnDigitos = datos.rentaImponible.replace(/[$.,\s]/g, "");
   const renta = Number(rentaEnDigitos);
   const digitosTelefono = datos.telefono.replace(/\D/g, "");
 
@@ -54,7 +54,7 @@ export async function POST(request) {
     datos.nombre.length < 2 || datos.nombre.length > 120
     || datos.clinica.length < 2 || datos.clinica.length > 100
     || !nacimientoNormalizado
-    || !/^\$?\s?(?:\d{1,3}(?:\.\d{3})+|\d+)$/.test(datos.rentaImponible)
+    || !/^\$?\s?(?:\d{1,3}(?:[.,\s]\d{3})+|\d+)$/.test(datos.rentaImponible)
     || !/^\d+$/.test(rentaEnDigitos)
     || !Number.isSafeInteger(renta) || renta <= 0
     || datos.correo.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.correo)
