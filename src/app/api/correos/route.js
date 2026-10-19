@@ -4,19 +4,22 @@ function texto(valor) {
   return typeof valor === "string" ? valor.trim().replace(/\s+/g, " ") : "";
 }
 
-function fechaNacimientoValida(valor) {
-  const partes = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(valor);
-  if (!partes) return false;
+function normalizarFechaNacimiento(valor) {
+  const formatoIso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(valor);
+  const formatoLocal = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(valor);
+  if (!formatoIso && !formatoLocal) return null;
 
-  const dia = Number(partes[1]);
-  const mes = Number(partes[2]);
-  const anio = Number(partes[3]);
+  const dia = Number(formatoIso ? formatoIso[3] : formatoLocal[1]);
+  const mes = Number(formatoIso ? formatoIso[2] : formatoLocal[2]);
+  const anio = Number(formatoIso ? formatoIso[1] : formatoLocal[3]);
   const fecha = new Date(Date.UTC(anio, mes - 1, dia));
 
-  return fecha.getUTCDate() === dia
-    && fecha.getUTCMonth() === mes - 1
-    && fecha.getUTCFullYear() === anio
-    && fecha <= new Date();
+  if (fecha.getUTCDate() !== dia
+    || fecha.getUTCMonth() !== mes - 1
+    || fecha.getUTCFullYear() !== anio
+    || fecha > new Date()) return null;
+
+  return `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}/${anio}`;
 }
 
 export async function POST(request) {
@@ -42,6 +45,7 @@ export async function POST(request) {
     telefono: texto(cuerpo.telefono),
   };
 
+  const nacimientoNormalizado = normalizarFechaNacimiento(datos.fechaNacimiento);
   const rentaEnDigitos = datos.rentaImponible.replace(/[$.\s]/g, "");
   const renta = Number(rentaEnDigitos);
   const digitosTelefono = datos.telefono.replace(/\D/g, "");
@@ -49,7 +53,7 @@ export async function POST(request) {
   if (
     datos.nombre.length < 2 || datos.nombre.length > 120
     || datos.clinica.length < 2 || datos.clinica.length > 100
-    || !fechaNacimientoValida(datos.fechaNacimiento)
+    || !nacimientoNormalizado
     || !/^\$?\s?(?:\d{1,3}(?:\.\d{3})+|\d+)$/.test(datos.rentaImponible)
     || !/^\d+$/.test(rentaEnDigitos)
     || !Number.isSafeInteger(renta) || renta <= 0
@@ -71,6 +75,7 @@ export async function POST(request) {
     return Response.json({ success: false, message: "El correo no está disponible en este momento." }, { status: 503 });
   }
 
+  datos.fechaNacimiento = nacimientoNormalizado;
   datos.rentaImponible = new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
