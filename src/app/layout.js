@@ -1,4 +1,5 @@
 import "./globals.css";
+import MetaPixel from "@/components/MetaPixel";
 
 export const metadata = {
   title: "Tu salud, tu decisión | Cámbiate de ISAPRE",
@@ -11,7 +12,10 @@ export default function DisposicionPrincipal({ children }) {
       lang="es"
       className="min-h-full antialiased"
     >
-      <body className="min-h-screen bg-[#e9ede7] font-[Arial,Helvetica,sans-serif]">{children}</body>
+      <body className="min-h-screen bg-[#e9ede7] font-[Arial,Helvetica,sans-serif]">
+        {children}
+        <MetaPixel />
+      </body>
     </html>
   );
 }

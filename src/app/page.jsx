@@ -11,12 +11,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { crearIdEvento, getMetaCookies, trackCustom, trackEvent } from "@/lib/metaPixel";
 
 const CLAVE_BORRADOR = "solicitud-salud-borrador-v1";
 const NUMERO_WHATSAPP_DESTINO = "56935568361"; // +56 9 3556 8361
 
 export default function PaginaBienestar() {
     const referenciaFormulario = useRef(null);
+    const referenciaSeccionFormulario = useRef(null);
+    const vistaFormularioRegistrada = useRef(false);
+    const inicioFormularioRegistrado = useRef(false);
     const [dialogoAbierto, establecerDialogoAbierto] = useState(false);
     const [contenidoDialogo, establecerContenidoDialogo] = useState({ titulo: "", mensaje: "" });
     const [enviando, establecerEnviando] = useState(false);
@@ -24,6 +28,27 @@ export default function PaginaBienestar() {
 
     useEffect(() => {
         establecerFechaMaxima(new Date().toISOString().slice(0, 10));
+    }, []);
+
+    // ViewContent: la sección del formulario entra en pantalla (una sola vez por visita).
+    useEffect(() => {
+        const seccion = referenciaSeccionFormulario.current;
+        if (!seccion || typeof IntersectionObserver === "undefined") return;
+
+        const observador = new IntersectionObserver((entradas) => {
+            if (!entradas.some((entrada) => entrada.isIntersecting) || vistaFormularioRegistrada.current) return;
+
+            vistaFormularioRegistrada.current = true;
+            observador.disconnect();
+            try {
+                trackEvent("ViewContent", { content_name: "formulario_asesoria" });
+            } catch (error) {
+                console.error("No se pudo registrar el evento ViewContent en Meta:", error);
+            }
+        }, { threshold: 0.25 });
+
+        observador.observe(seccion);
+        return () => observador.disconnect();
     }, []);
 
     useEffect(() => {
@@ -54,31 +79,34 @@ export default function PaginaBienestar() {
         }
     }
 
-    function abrirWhatsAppConDatos() {
-        const formulario = referenciaFormulario.current;
-        if (!formulario) return;
+    // IniciarFormulario: primer foco en cualquier campo del formulario (una sola vez por visita).
+    function registrarInicioFormulario() {
+        if (inicioFormularioRegistrado.current) return;
 
-        if (!formulario.reportValidity()) {
-            establecerContenidoDialogo({
-                titulo: "Completa el formulario",
-                mensaje: "Para enviarnos tus datos por WhatsApp, primero completa todos los campos del formulario.",
-            });
-            establecerDialogoAbierto(true);
-            formulario.scrollIntoView({ behavior: "smooth", block: "center" });
-            return;
+        inicioFormularioRegistrado.current = true;
+        try {
+            trackCustom("IniciarFormulario");
+        } catch (error) {
+            console.error("No se pudo registrar el evento IniciarFormulario en Meta:", error);
         }
+    }
 
-        const datos = Object.fromEntries(new FormData(formulario).entries());
-        const fechaNacimiento = datos.fechaNacimiento.split("-").reverse().join("/");
+    // Lead: se dispara solo después de que el POST responde OK, con el mismo
+    // eventId que viaja al servidor para deduplicar con la Conversions API.
+    function registrarLeadMeta(idEvento) {
+        try {
+            trackEvent("Lead", { content_name: "asesoria_isapre" }, idEvento);
+        } catch (error) {
+            console.error("No se pudo registrar el evento Lead en Meta:", error);
+        }
+    }
+
+    function abrirWhatsApp() {
         const mensaje = [
-            "Hola, quiero revisar mis opciones de ISAPRE. Estos son mis datos:",
-            `Nombre: ${datos.nombre}`,
-            `Clínica de preferencia: ${datos.clinica}`,
-            `Fecha de nacimiento: ${fechaNacimiento}`,
-            `Renta imponible: ${datos.rentaImponible}`,
-            `Correo: ${datos.correo}`,
-            `Cargas: ${datos.cargas}`,
-            `Teléfono: ${datos.telefono}`,
+            "Hola 👋, ¡buenas!",
+            "Vengo desde el sitio web de *Tu Salud, tu tranquilidad* 🌿",
+            "Quisiera que un especialista en ISAPRES se comunique conmigo para revisar mis opciones y aclarar todas mis dudas 😊",
+            "¡Muchas gracias!",
         ].join("\n");
 
         const enlaceWhatsApp = `https://wa.me/${NUMERO_WHATSAPP_DESTINO}?text=${encodeURIComponent(mensaje)}`;
@@ -94,13 +122,22 @@ export default function PaginaBienestar() {
         const datos = Object.fromEntries(new FormData(formulario).entries());
         establecerEnviando(true);
 
+        const idEventoMeta = crearIdEvento();
+        const { fbp, fbc } = getMetaCookies();
+
         try {
             const respuestaBrevo = await fetch("/api/correos", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(datos),
+                body: JSON.stringify({
+                    ...datos,
+                    metaEventId: idEventoMeta,
+                    fbp,
+                    fbc,
+                    eventSourceUrl: window.location.href,
+                }),
             });
 
             const respuestaBackend = await respuestaBrevo.json();
@@ -113,6 +150,7 @@ export default function PaginaBienestar() {
                 } catch {
                     console.warn("No se pudo limpiar el borrador local.");
                 }
+                registrarLeadMeta(idEventoMeta);
             }
 
             if (!respuestaBackend.success) {
@@ -169,8 +207,8 @@ export default function PaginaBienestar() {
               <div className="flex items-center gap-3 sm:items-start"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0d644b]"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-familia" /></svg></span><p className="text-xs font-medium leading-5 text-[#38594b]">Para ti y tu familia</p></div>
               <div className="flex items-center gap-3 sm:items-start"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-[#0d644b]"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-escudo" /></svg></span><p className="text-xs font-medium leading-5 text-[#38594b]">Te acompañamos en todo el proceso</p></div>
             </div>
-                        <button type="button" onClick={abrirWhatsAppConDatos} className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#0b6048] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(10,81,56,0.9)] transition hover:bg-[#084d3b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6048] sm:w-fit"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-whatsapp" /></svg>Revisar mis opciones gratis<span aria-hidden="true" className="text-lg font-light">↗</span></button>
-            <p className="mt-3 text-xs leading-5 text-[#52645d]">Al hacer clic se abrirá WhatsApp con tus datos del formulario listos para enviarnos.</p>
+                        <button type="button" onClick={abrirWhatsApp} className="mt-8 inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-full bg-[#0b6048] px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(10,81,56,0.9)] transition hover:bg-[#084d3b] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b6048] sm:w-fit"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-whatsapp" /></svg>Revisar mis opciones gratis<span aria-hidden="true" className="text-lg font-light">↗</span></button>
+            <p className="mt-3 text-xs leading-5 text-[#52645d]">Se abrirá WhatsApp con un mensaje listo para enviar: un especialista en ISAPRES te responderá y aclarará tus dudas.</p>
           </div>
           <div role="img" aria-label="Pareja sonriendo" className="relative min-h-[330px] bg-[url('/imagenes/pareja-tranquilidad.png')] bg-cover bg-right sm:min-h-[420px] lg:min-h-full">
             <div className="absolute bottom-5 left-5 right-5 rounded-2xl border border-white/70 bg-white/90 p-4 shadow-lg shadow-[#1f4d35]/10 backdrop-blur-sm sm:bottom-8 sm:left-8 sm:right-auto sm:max-w-[300px]"><p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#95612a]">Beneficio adicional</p><p className="mt-1 text-base font-bold text-[#3e2865]">Bono de Bienvenida</p><p className="mt-1 text-xs leading-5 text-[#625f68]">Si realizas tu cambio y cumples las condiciones de la promoción.</p></div>
@@ -219,7 +257,7 @@ export default function PaginaBienestar() {
             <article className="flex gap-4 rounded-2xl border border-[#e5ebe5] bg-white p-4"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eaf4ea] text-[#0b6048]"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><use href="#icono-documento" /></svg></span><div><h3 className="text-sm font-semibold">Un plan acorde a tu presupuesto</h3><p className="mt-1 text-[13px] leading-5 text-[#66766e]">Revisamos opciones que se adapten a tu renta y a lo que realmente usas.</p></div></article>
           </div>
         </div>
-        <section aria-labelledby="titulo-formulario" className="rounded-[26px] border border-[#e2ebe1] bg-white p-5 shadow-[0_24px_65px_-40px_rgba(22,71,49,0.42)] sm:p-8 lg:p-9">
+        <section ref={referenciaSeccionFormulario} aria-labelledby="titulo-formulario" className="rounded-[26px] border border-[#e2ebe1] bg-white p-5 shadow-[0_24px_65px_-40px_rgba(22,71,49,0.42)] sm:p-8 lg:p-9">
           <p className="inline-flex items-center gap-2 rounded-full bg-[#eaf4e9] px-3 py-1.5 text-[11px] font-semibold text-[#2e674c]">● 100% seguro y sin compromiso</p>
           <h2 id="titulo-formulario" className="mt-4 text-[clamp(1.6rem,3vw,2rem)] font-bold tracking-[-0.035em]">Completa tus datos</h2>
           <p className="mt-1 text-sm leading-6 text-[#69776f]">Y te contactaremos para evaluar tu caso.</p>
@@ -228,7 +266,7 @@ export default function PaginaBienestar() {
 
 
             {/* INPUTS DEL FORMULARIO */}
-          <form ref={referenciaFormulario} onChange={guardarBorrador} onSubmit={enviarCorreosBrevo} aria-label="Datos de contacto y preferencias" className="mt-7 grid gap-x-4 gap-y-5 sm:grid-cols-2">
+          <form ref={referenciaFormulario} onChange={guardarBorrador} onFocus={registrarInicioFormulario} onSubmit={enviarCorreosBrevo} aria-label="Datos de contacto y preferencias" className="mt-7 grid gap-x-4 gap-y-5 sm:grid-cols-2">
             <div><label htmlFor="nombre" className="mb-2 block text-xs font-semibold">Nombre completo *</label><input id="nombre" name="nombre" type="text" autoComplete="name" required maxLength={120} pattern="\S.*" title="Ingresa tu nombre completo" placeholder="Ej: María Pérez González" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="clinica" className="mb-2 block text-xs font-semibold">Clínica de preferencia *</label><input id="clinica" name="clinica" type="text" required maxLength={100} pattern="\S.*" title="Ingresa la clínica de preferencia" placeholder="Ej: Clínica Santa María" className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition placeholder:text-[#9aa9a0] focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>
             <div><label htmlFor="nacimiento" className="mb-2 block text-xs font-semibold">Fecha de nacimiento *</label><input id="nacimiento" name="fechaNacimiento" type="date" autoComplete="bday" required max={fechaMaxima || undefined} className="h-11 w-full rounded-xl border border-[#dce5de] bg-[#fcfdfb] px-3 text-sm text-[#18382f] outline-none transition focus:border-[#4f9a73] focus:ring-2 focus:ring-[#4f9a73]/15" /></div>

@@ -1,7 +1,17 @@
 import { generarCorreoContacto } from "./plantilla-correo.mjs";
+import { sendLeadToMeta } from "@/lib/metaCapi";
 
 function texto(valor) {
   return typeof valor === "string" ? valor.trim().replace(/\s+/g, " ") : "";
+}
+
+function obtenerIpCliente(request) {
+  const reenviadas = request.headers.get("x-forwarded-for");
+  if (reenviadas) {
+    const primera = reenviadas.split(",")[0]?.trim();
+    if (primera) return primera;
+  }
+  return request.headers.get("x-real-ip") || undefined;
 }
 
 function normalizarFechaNacimiento(valor) {
@@ -112,6 +122,24 @@ export async function POST(request) {
         message: resultadoBrevo.message,
       });
       return Response.json({ success: false, message: "No pudimos enviar tu solicitud. Inténtalo nuevamente." }, { status: 502 });
+    }
+
+    // Conversions API de Meta: solo después de procesar bien el lead. Un
+    // fallo aquí no afecta la respuesta al usuario (sendLeadToMeta ya limita
+    // el tiempo a ~3 s; los datos sensibles viajan solo hasheados).
+    try {
+      await sendLeadToMeta({
+        eventId: texto(cuerpo.metaEventId) || undefined,
+        email: datos.correo,
+        phone: datos.telefono,
+        fbp: texto(cuerpo.fbp) || undefined,
+        fbc: texto(cuerpo.fbc) || undefined,
+        clientIp: obtenerIpCliente(request),
+        userAgent: request.headers.get("user-agent") || undefined,
+        eventSourceUrl: texto(cuerpo.eventSourceUrl) || undefined,
+      });
+    } catch (error) {
+      console.error("[META] No se pudo registrar el Lead en la Conversions API:", error);
     }
 
     return Response.json({
