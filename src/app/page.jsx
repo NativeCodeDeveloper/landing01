@@ -196,8 +196,66 @@ export default function PaginaBienestar() {
 <div className="relative mx-auto h-[340px] w-full max-w-[650px] overflow-hidden sm:h-[440px] md:absolute md:inset-y-0 md:right-0 md:h-full md:w-[55%] md:max-w-none">
 <Image src="/imagenes/familia-salud-alta-calidad.png" alt="Familia sonriente compartiendo un abrazo al aire libre" width={1536} height={1024} preload sizes="(max-width: 767px) 100vw, (max-width: 1200px) 55vw, 660px" className="h-full w-full object-cover object-center" />
 <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-20 bg-gradient-to-r from-white to-transparent md:block"/>
-<div className="absolute right-3 top-4 flex max-w-[170px] gap-2 rounded-2xl bg-white/95 p-3 shadow-lg sm:right-5 sm:top-10 sm:p-4"><span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-green-600 font-bold text-white">✓</span><div><p className="text-sm font-bold leading-tight">Asesoría gratuita</p><p className="mt-1 text-xs leading-snug">Sin costo y<br/> sin compromiso</p></div></div>
-<div className="absolute bottom-5 right-3 flex max-w-[210px] gap-3 rounded-2xl bg-white/95 p-4 shadow-lg sm:bottom-12 sm:right-5"><svg aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 32 32" className="h-8 w-8 shrink-0 text-green-600"><path d="m3 10 13-7 13 7-13 7Zm0 6 13 7 13-7M3 22l13 7 13-7"/></svg><div><p className="text-sm font-bold leading-tight">Opciones para tu presupuesto</p><p className="mt-1 text-xs leading-snug">Encuentra el plan que mejor se adapte a ti</p></div></div>
+    {/* TARJETA PROMOCIONAL - BONO DE BIENVENIDA */}
+    <a
+        href="#bono"
+        aria-label="Conoce las condiciones del bono de bienvenida"
+        className="
+    group absolute right-3 top-4 z-20
+    block w-[min(260px,calc(100%-24px))]
+    overflow-hidden rounded-2xl
+    border border-white/70
+    bg-white/95 p-4
+    text-[#123b30]
+    shadow-[0_12px_36px_rgba(0,0,0,0.20)]
+    backdrop-blur-md
+    transition duration-300
+    hover:-translate-y-1
+    hover:shadow-[0_18px_44px_rgba(0,0,0,0.25)]
+    sm:right-5 sm:top-10 sm:w-[285px] sm:p-5
+  "
+    >
+        {/* Línea decorativa superior */}
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500" />
+
+        <div className="flex items-start gap-3">
+
+            {/* Ícono destacado */}
+            <span
+                aria-hidden="true"
+                className="
+        flex h-11 w-11 shrink-0
+        items-center justify-center
+        rounded-xl
+        bg-gradient-to-br from-emerald-500 to-teal-600
+        text-2xl shadow-sm
+      "
+            >
+      🎁
+    </span>
+
+            <div className="min-w-0">
+
+                {/* Etiqueta promocional */}
+                <span className="inline-block rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800">
+        Beneficio especial
+      </span>
+
+                {/* Título principal */}
+                <p className="mt-2 text-lg font-extrabold leading-[1.12] tracking-tight sm:text-xl">
+                    ¡Recibe un{" "}
+                    <span className="text-emerald-600">
+          bono de bienvenida!
+        </span>
+                </p>
+
+            </div>
+        </div>
+
+
+        {/* Condiciones y CTA */}
+
+    </a>
 </div>
 </section>
 <div className="mx-auto max-w-[1200px] px-5 pt-6 sm:px-10"></div>
