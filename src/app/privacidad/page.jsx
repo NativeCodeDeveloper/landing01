@@ -24,7 +24,7 @@ const SECCIONES = [
   {
     titulo: "Qué datos recogemos",
     cuerpo: [
-      "Solo los que tú nos entregas en el formulario: nombre, teléfono, correo electrónico, fecha de nacimiento, sistema de salud actual, tramo de renta imponible, si tienes cargas y, si quieres indicarla, tu clínica de preferencia.",
+      "Solo los que tú nos entregas en el formulario: nombre, teléfono y correo electrónico. Nada más.",
       "Además, nuestro sitio registra datos técnicos de navegación a través del píxel de Meta (Facebook e Instagram): identificadores de cookies publicitarias, dirección IP y navegador. Estos datos se usan para medir el rendimiento de nuestros anuncios.",
       "No te pedimos RUT, datos bancarios ni información clínica en este formulario.",
     ],
@@ -32,7 +32,7 @@ const SECCIONES = [
   {
     titulo: "Para qué los usamos",
     cuerpo: [
-      "Para contactarte y preparar tu comparación de planes. Tu edad, tu renta y tus cargas son precisamente las variables que determinan el precio y la cobertura de cada plan, por eso las necesitamos.",
+      "Para contactarte y preparar tu comparación de planes. En el formulario te pedimos solo lo mínimo; los detalles de tu situación (edad, renta, cargas, plan actual) los conversamos directamente por teléfono o WhatsApp, cuando tú quieras.",
       "Si decides avanzar con un cambio, compartimos los datos necesarios con la ISAPRE que tú elijas para tramitar la afiliación. Nunca antes de que nos lo autorices.",
       "No vendemos ni cedemos tus datos a terceros con fines comerciales.",
     ],

@@ -24,10 +24,6 @@ export function generarCorreoContacto(datos, fecha = new Date()) {
   const nombre = escaparHtml(datos.nombre);
   const correo = escaparHtml(datos.correo);
   const telefono = escaparHtml(datos.telefono);
-  const clinica = escaparHtml(datos.clinica);
-  const nacimiento = escaparHtml(datos.fechaNacimiento);
-  const renta = escaparHtml(datos.rentaImponible);
-  const cargas = escaparHtml(datos.cargas);
   const enlaceCorreo = `mailto:${encodeURIComponent(datos.correo)}`;
   const enlaceTelefono = `tel:${datos.telefono.replace(/[^+\d]/g, "")}`;
   const fechaSolicitud = escaparHtml(new Intl.DateTimeFormat("es-CL", {
@@ -55,7 +51,7 @@ export function generarCorreoContacto(datos, fecha = new Date()) {
   </style>
 </head>
 <body style="margin:0;padding:0;background-color:#edf2ee;-webkit-text-size-adjust:100%;">
-  <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;">Nueva solicitud de ${nombre}: datos de contacto y preferencias.</span>
+  <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;">Nueva solicitud de ${nombre}: datos de contacto.</span>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;table-layout:fixed;border-collapse:collapse;background-color:#edf2ee;">
     <tr>
       <td class="envoltura" align="center" style="padding:40px 16px;">
@@ -69,25 +65,13 @@ export function generarCorreoContacto(datos, fecha = new Date()) {
             </td>
           </tr>
           <tr>
-            <td class="seccion" style="padding:36px 44px 18px;">
-              <p style="margin:0 0 8px;color:#168054;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;line-height:16px;text-transform:uppercase;">01 / Contacto</p>
+            <td class="seccion" style="padding:36px 44px;">
+              <p style="margin:0 0 8px;color:#168054;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;line-height:16px;text-transform:uppercase;">Contacto</p>
               <h2 style="margin:0 0 14px;color:#123b2b;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:29px;">Cómo contactarle</h2>
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
                 ${filaDato("Nombre completo", nombre)}
                 ${filaDato("Correo electrónico", `<a href="${enlaceCorreo}" style="color:#116a48;text-decoration:none;word-break:break-word;">${correo}</a>`)}
                 ${filaDato("Teléfono", `<a href="${enlaceTelefono}" style="color:#116a48;text-decoration:none;">${telefono}</a>`)}
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td class="seccion" style="padding:24px 44px 36px;">
-              <p style="margin:0 0 8px;color:#168054;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.8px;line-height:16px;text-transform:uppercase;">02 / Preferencias</p>
-              <h2 style="margin:0 0 14px;color:#123b2b;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:29px;">Lo que nos contó</h2>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
-                ${filaDato("Clínica de preferencia", clinica)}
-                ${filaDato("Fecha de nacimiento", nacimiento)}
-                ${filaDato("Renta imponible", renta)}
-                ${filaDato("¿Tiene cargas?", cargas)}
               </table>
             </td>
           </tr>
