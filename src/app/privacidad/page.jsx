@@ -10,7 +10,7 @@ export const metadata = {
 // TODO CLIENTE: reemplazar los marcadores [ ... ] por los datos reales antes
 // de publicar. Sin un canal de contacto real esta política no sirve de nada,
 // porque es el medio por el que las personas ejercen sus derechos.
-const CORREO_CONTACTO = "contacto@[DOMINIO].cl";
+const CORREO_CONTACTO = "tusaludnuestrocompromiso2026@gmail.com";
 const ULTIMA_ACTUALIZACION = "noviembre de 2026";
 
 const SECCIONES = [
